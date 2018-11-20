@@ -1,19 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
     <script src="node_modules/axios/dist/axios.js"></script>
-    <script>
-        axios.get('https://restcountries.eu/rest/v2/name/spain')
-        .then((x) => {
-            console.log(x)
-        })
-    </script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+        crossorigin="anonymous">
 </head>
+
 <body>
-    
+    <section class="country-description">
+        <h1 class="country-name"></h1>
+        <p class="country-phone-prefix"></p>
+    </section>
+
+    <button id="getAPIData" class="button btn-primary">Click to obtain Spain data</button>
+    <script>
+        //object where we store the data request via an ajax operation
+        function CountryData(name, prefix) {
+            if (name === "") throw new Error("country name must have a value")
+
+            this.name = name
+            this.prefix = prefix
+        }
+
+        //here we render the data obtained via an ajax request (4)
+        function renderHTMLIronhack(countryData) {
+            document.querySelector('.country-name').innerText = countryData.name
+            document.querySelector('.country-phone-prefix').innerText = countryData.prefix
+        }
+
+        //makes the AJAX request to the API and then calls it for rendering phase (3)
+        function makeAJAXRequest() {
+            axios.get('https://restcountries.eu/rest/v2/name/france')
+                .then((countryData) => {
+                    //renders the data obtained and passes it to the view renderer
+                    //we are instantiating a CountryData object, so we can have the information in one place
+                    renderHTMLIronhack(new CountryData(countryData.data[0].name, countryData.data[0].callingCodes[0]))
+                })
+        }
+
+        //this function handles what happens when you click the button (2)
+        function clickHandler() {
+            makeAJAXRequest()
+        }
+
+        //button handler - when you click, you call to makeAJAXRequest via clickHandler() (1)
+        document.getElementById('getAPIData').onclick = clickHandler
+
+        //unit test - please pay attention to the use of spies https://jasmine.github.io/2.0/introduction.html#section-Spies
+        // it('testing the clickHandler function calls the ajax request', function () {
+        //     spyOn(window, 'makeAjaxRequest')
+        //     window.clickHandler()
+        //     expect(window.makeAjaxRequest).toHaveBeenCalled()
+        // })
+    </script>
 </body>
+
 </html>
