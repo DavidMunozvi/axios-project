@@ -9,14 +9,17 @@
     <script src="node_modules/axios/dist/axios.js"></script>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
         crossorigin="anonymous">
-        <style>
-            select { 
-                text-transform: capitalize;
-            }
-        </style>
+    <style>
+        select {
+            text-transform: capitalize;
+        }
+    </style>
+    <script src="node_modules/chart.js/dist/Chart.js"></script>
 </head>
 
 <body>
+    <canvas id="myChart"></canvas>
+
     <section class="country-description">
         <h1 class="country-name"></h1>
         <p class="country-phone-prefix"></p>
@@ -61,14 +64,56 @@
             makeAJAXRequest()
         }
 
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+
         //we are receiving what the dropdown current value is
         function countrySelectorChangeHandler(e) {
-            document.querySelector('#getAPIData').innerText = `Click to obtain ${e.target.value} data`
+            document.querySelector('#getAPIData').innerText = `Click to obtain ${capitalizeFirstLetter(e.target.value)} data`
         }
 
         //button handler - when you click, you call to makeAJAXRequest via clickHandler() (1)
         document.getElementById('getAPIData').onclick = clickHandler
         document.getElementById('countrySelector').onchange = countrySelectorChangeHandler
+
+        function drawChart() {
+            const stockInfo = axios.create({
+                baseURL: 'https://api.iextrading.com/1.0/stock/',
+            });
+
+            const stockTicket = "amzn";
+
+            stockInfo.get(`${stockTicket}/chart`)
+                .then(response => {
+                    printTheChart(response.data);
+                })
+                .catch(error => {
+                    console.log(error);
+                });
+
+            const printTheChart = (stockData => {
+                const stockLabels = stockData.map(element => element.date);
+                const stockPrice = stockData.map(element => element.close);
+                const ctx = document.getElementById('myChart').getContext('2d');
+                const chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: stockLabels,
+                        datasets: [{
+                            label: "Stock Chart",
+                            backgroundColor: 'rgb(255, 99, 132)',
+                            fill: false,
+                            tension: 0,
+                            borderColor: 'rgb(255, 99, 132)',
+                            data: stockPrice,
+                        }]
+                    }
+                });
+            });
+        }
+
+        drawChart()
 
         //unit test - please pay attention to the use of spies https://jasmine.github.io/2.0/introduction.html#section-Spies
         // it('testing the clickHandler function calls the ajax request', function () {
