@@ -12,6 +12,12 @@
     <style>
         select {
             text-transform: capitalize;
+            width: 200px;
+            margin-right: 20px;
+        }
+
+        fieldset {
+            margin: 20px;
         }
     </style>
     <script src="node_modules/chart.js/dist/Chart.js"></script>
@@ -25,13 +31,27 @@
         <p class="country-phone-prefix"></p>
     </section>
 
-    <select name="" id="countrySelector">
-        <option value="france">france</option>
-        <option value="spain" selected>spain</option>
-        <option value="germany">germany</option>
-    </select>
+    <fieldset>
+        <select name="" id="countrySelector">
+            <option value="france">france</option>
+            <option value="spain" selected>spain</option>
+            <option value="germany">germany</option>
+        </select>
 
-    <button id="getAPIData" class="button btn-primary">Click to obtain Spain data</button>
+        <button id="getCountryData" class="button btn-primary">Click to obtain Spain data</button>
+    </fieldset>
+
+    <fieldset>
+        <select name="" id="companySelector">
+            <option value="tsla">Tesla</option>
+            <option value="amzn">Amazon</option>
+            <option value="aapl">Apple</option>
+        </select>
+        <button id="getCompanyData" class="button btn-primary">Click to obtain company data</button>
+
+    </fieldset>
+
+
     <script>
         //object where we store the data request via an ajax operation
         function CountryData(name, prefix) {
@@ -48,7 +68,7 @@
         }
 
         //makes the AJAX request to the API and then calls it for rendering phase (3)
-        function makeAJAXRequest() {
+        function makeCountryAJAXRequest() {
             let chosenCountry = document.querySelector('#countrySelector').value
 
             axios.get(`https://restcountries.eu/rest/v2/name/${chosenCountry}`)
@@ -60,8 +80,12 @@
         }
 
         //this function handles what happens when you click the button (2)
-        function clickHandler() {
-            makeAJAXRequest()
+        function countryDataClickHandler() {
+            makeCountryAJAXRequest()
+        }
+
+        function companyDataClickHandler() {
+            drawCompanyResultsChart(document.getElementById('companySelector').value)
         }
 
         function capitalizeFirstLetter(string) {
@@ -70,20 +94,15 @@
 
         //we are receiving what the dropdown current value is
         function countrySelectorChangeHandler(e) {
-            document.querySelector('#getAPIData').innerText = `Click to obtain ${capitalizeFirstLetter(e.target.value)} data`
+            document.querySelector('#getCountryData').innerText = `Click to obtain ${capitalizeFirstLetter(e.target.value)} data`
         }
 
-        //button handler - when you click, you call to makeAJAXRequest via clickHandler() (1)
-        document.getElementById('getAPIData').onclick = clickHandler
-        document.getElementById('countrySelector').onchange = countrySelectorChangeHandler
-
-        function drawChart() {
+        function drawCompanyResultsChart(stockTicket) {
             const stockInfo = axios.create({
                 baseURL: 'https://api.iextrading.com/1.0/stock/',
             });
 
-            const stockTicket = "amzn";
-
+            //we are crafting this URL : https://api.iextrading.com/1.0/stock/aapl/chart
             stockInfo.get(`${stockTicket}/chart`)
                 .then(response => {
                     printTheChart(response.data);
@@ -92,10 +111,13 @@
                     console.log(error);
                 });
 
+            //chart rendering function
             const printTheChart = (stockData => {
                 const stockLabels = stockData.map(element => element.date);
                 const stockPrice = stockData.map(element => element.close);
                 const ctx = document.getElementById('myChart').getContext('2d');
+
+                //here we give the chart the data it needs
                 const chart = new Chart(ctx, {
                     type: 'line',
                     data: {
@@ -105,6 +127,7 @@
                             backgroundColor: 'rgb(255, 99, 132)',
                             fill: false,
                             tension: 0,
+                            pointHoverRadius: 20,
                             borderColor: 'rgb(255, 99, 132)',
                             data: stockPrice,
                         }]
@@ -113,13 +136,18 @@
             });
         }
 
-        drawChart()
+        drawCompanyResultsChart('aapl')
+
+        //button handler - when you click, you call to makeCountryAJAXRequest via clickHandler() (1)
+        document.getElementById('getCountryData').onclick = countryDataClickHandler
+        document.getElementById('getCompanyData').onclick = companyDataClickHandler
+        document.getElementById('countrySelector').onchange = countrySelectorChangeHandler
 
         //unit test - please pay attention to the use of spies https://jasmine.github.io/2.0/introduction.html#section-Spies
         // it('testing the clickHandler function calls the ajax request', function () {
-        //     spyOn(window, 'makeAjaxRequest')
+        //     spyOn(window, 'makeCountryAJAXRequest')
         //     window.clickHandler()
-        //     expect(window.makeAjaxRequest).toHaveBeenCalled()
+        //     expect(window.makeCountryAJAXRequest).toHaveBeenCalled()
         // })
     </script>
 </body>
